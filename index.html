@@ -97,44 +97,6 @@
   .setup-error { color: var(--red); font-size: 13px; margin-bottom: 0.75rem; display: none; text-align: center; }
   .setup-info { background: var(--sage-light); border-radius: var(--radius-sm); padding: 10px 12px; font-size: 13px; color: var(--sage-dark); margin-bottom: 1.25rem; line-height: 1.5; }
 
-  /* CONFIG SCREEN */
-  #configScreen {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    min-height: 100vh;
-    padding: 2rem 1.5rem;
-    background: var(--cream);
-  }
-  #configScreen h1 { font-family: 'Lora', serif; font-size: 28px; color: var(--sage-dark); margin-bottom: 0.5rem; text-align: center; }
-  #configScreen p { color: var(--text-muted); font-size: 14px; text-align: center; margin-bottom: 2rem; max-width: 340px; }
-  .config-card {
-    background: var(--white);
-    border-radius: var(--radius);
-    border: 1px solid var(--border);
-    padding: 1.5rem;
-    width: 100%;
-    max-width: 400px;
-  }
-  .config-card label { display: block; font-size: 12px; font-weight: 500; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; }
-  .config-card input {
-    width: 100%;
-    padding: 10px 12px;
-    border: 1px solid var(--border);
-    border-radius: var(--radius-sm);
-    font-family: 'DM Sans', sans-serif;
-    font-size: 13px;
-    color: var(--text);
-    background: var(--cream);
-    margin-bottom: 1rem;
-    outline: none;
-  }
-  .config-card input:focus { border-color: var(--sage); }
-  .steps { background: var(--sage-light); border-radius: var(--radius-sm); padding: 1rem; margin-bottom: 1.5rem; }
-  .steps p { font-size: 13px; color: var(--sage-dark); line-height: 1.7; }
-  .steps code { background: rgba(74,107,78,0.12); padding: 1px 5px; border-radius: 4px; font-size: 12px; font-family: monospace; }
-  .steps a { color: var(--sage-dark); font-weight: 500; }
   .btn-main {
     width: 100%;
     padding: 12px;
@@ -381,36 +343,12 @@
   </div>
 </div>
 
-<!-- CONFIG SCREEN -->
-<div id="configScreen">
-  <h1>🍽 Menú Semanal</h1>
-  <p>Planificador compartido para dos personas. Conecta tu Google Sheet para sincronizar con tu pareja.</p>
-  <div class="config-card">
-    <div class="steps">
-      <p>
-        <strong>Configuración (5 min, una sola vez):</strong><br><br>
-        1. Crea una hoja en <a href="https://sheets.google.com" target="_blank">Google Sheets</a><br>
-        2. Ve a <strong>Extensiones → Apps Script</strong><br>
-        3. Borra lo que hay y pega el código del archivo <code>apps_script.js</code><br>
-        4. Guarda, haz clic en <strong>Implementar → Nueva implementación</strong><br>
-        &nbsp;&nbsp;&nbsp;→ Tipo: <em>App web</em> · Acceso: <em>Cualquiera</em><br>
-        5. Copia la URL que te da y pégala abajo
-      </p>
-    </div>
-    <label>URL de tu Apps Script</label>
-    <input type="url" id="scriptUrl" placeholder="https://script.google.com/macros/s/..." />
-    <div class="config-error" id="configError">No se pudo conectar. Revisa la URL.</div>
-    <button class="btn-main" onclick="connectScript()">Conectar y entrar →</button>
-  </div>
-</div>
-
 <!-- MAIN APP -->
 <div id="app">
   <div class="app-header">
     <div class="header-top">
       <h1>🍽 Menú</h1>
-      <button class="sync-btn" id="syncBtn" onclick="syncNow()">⟳ Sincronizar</button>
-      <button class="sync-btn" onclick="doLogout()" style="margin-left:4px" title="Cerrar sesión">🔒</button>
+      <button class="sync-btn" onclick="doLogout()" title="Cerrar sesión">🔒 Salir</button>
     </div>
     <div class="week-nav">
       <button onclick="changeWeek(-1)">‹ Antes</button>
@@ -534,7 +472,6 @@ function doLogout() {
 
 
 const LOCAL_KEY = 'menu_semanal_v3';
-let SCRIPT_URL = '';
 
 let state = {
   recipes: [
@@ -856,60 +793,6 @@ function clearChecked() {
   saveLocal(); renderShopping();
 }
 
-// ---- SYNC WITH GOOGLE SHEETS ----
-function setSyncStatus(status) {
-  const btn = document.getElementById('syncBtn');
-  btn.className = 'sync-btn ' + status;
-  btn.textContent = status === 'syncing' ? '⟳ Sincronizando...' : status === 'error' ? '⚠ Error' : '⟳ Sincronizar';
-}
-
-async function syncNow() {
-  if (!SCRIPT_URL) return;
-  setSyncStatus('syncing');
-  try {
-    // Push our state
-    await fetch(SCRIPT_URL, {
-      method: 'POST',
-      mode: 'no-cors',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ action: 'save', data: JSON.stringify({ recipes: state.recipes, weeks: state.weeks, checked: state.checked }) })
-    });
-    // Pull latest
-    const res = await fetch(SCRIPT_URL + '?action=load', { mode: 'cors' });
-    if (res.ok) {
-      const json = await res.json();
-      if (json.data) {
-        const remote = JSON.parse(json.data);
-        state.recipes = remote.recipes || state.recipes;
-        state.weeks = remote.weeks || state.weeks;
-        state.checked = remote.checked || state.checked;
-        saveLocal();
-        renderPlanner();
-        renderRecipes();
-        if (document.getElementById('shopping').style.display !== 'none') renderShopping();
-      }
-    }
-    setSyncStatus('');
-  } catch(e) {
-    setSyncStatus('error');
-    setTimeout(() => setSyncStatus(''), 3000);
-  }
-}
-
-async function connectScript() {
-  const url = document.getElementById('scriptUrl').value.trim();
-  const err = document.getElementById('configError');
-  err.style.display = 'none';
-  if (!url || !url.includes('script.google.com')) {
-    err.textContent = 'Introduce una URL válida de Apps Script.';
-    err.style.display = 'block';
-    return;
-  }
-  SCRIPT_URL = url;
-  localStorage.setItem('menu_script_url', url);
-  startApp();
-}
-
 // ---- LOCAL STORAGE ----
 function saveLocal() {
   try { localStorage.setItem(LOCAL_KEY, JSON.stringify({ recipes: state.recipes, weeks: state.weeks, checked: state.checked })); } catch(e) {}
@@ -917,7 +800,6 @@ function saveLocal() {
 
 function saveAndSync() {
   saveLocal();
-  if (SCRIPT_URL) syncNow();
 }
 
 function loadLocal() {
@@ -932,34 +814,27 @@ function startApp() {
   loadLocal();
   document.getElementById('loginScreen').style.display = 'none';
   document.getElementById('setupScreen').style.display = 'none';
-  document.getElementById('configScreen').style.display = 'none';
   document.getElementById('app').style.display = 'block';
   document.getElementById('weekLabel').textContent = getWeekLabel();
   renderPlanner();
   renderRecipes();
-  if (SCRIPT_URL) syncNow();
 }
 
 // On load
 window.onload = () => {
   const hasPassword = !!localStorage.getItem(AUTH_KEY);
 
-  // Already logged in this session
   if (isLoggedIn()) {
-    const savedUrl = localStorage.getItem('menu_script_url');
-    if (savedUrl) SCRIPT_URL = savedUrl;
     startApp();
     return;
   }
 
-  // No password set yet → show setup
   if (!hasPassword) {
     document.getElementById('loginScreen').style.display = 'none';
     document.getElementById('setupScreen').style.display = 'flex';
     return;
   }
 
-  // Show login
   document.getElementById('loginScreen').style.display = 'flex';
 };
 </script>
