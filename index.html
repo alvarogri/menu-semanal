@@ -33,6 +33,70 @@
     font-size: 15px;
   }
 
+  /* LOGIN SCREEN */
+  #loginScreen {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    padding: 2rem 1.5rem;
+    background: var(--cream);
+  }
+  #loginScreen h1 { font-family: 'Lora', serif; font-size: 32px; color: var(--sage-dark); margin-bottom: 0.4rem; text-align: center; }
+  #loginScreen .subtitle { color: var(--text-muted); font-size: 14px; text-align: center; margin-bottom: 2rem; }
+  .login-card {
+    background: var(--white);
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+    padding: 1.75rem 1.5rem;
+    width: 100%;
+    max-width: 340px;
+    box-shadow: 0 4px 24px rgba(0,0,0,0.06);
+  }
+  .login-card label { display: block; font-size: 12px; font-weight: 500; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 5px; }
+  .login-card input {
+    width: 100%; padding: 11px 13px;
+    border: 1px solid var(--border); border-radius: var(--radius-sm);
+    font-family: 'DM Sans', sans-serif; font-size: 15px; color: var(--text);
+    background: var(--cream); margin-bottom: 1rem; outline: none;
+    transition: border-color 0.15s;
+  }
+  .login-card input:focus { border-color: var(--sage); }
+  .login-card input.error { border-color: var(--red); }
+  .login-error { color: var(--red); font-size: 13px; margin-bottom: 0.75rem; display: none; text-align: center; }
+  .login-hint { font-size: 12px; color: var(--text-light); text-align: center; margin-top: 1rem; }
+  .login-hint a { color: var(--sage); cursor: pointer; text-decoration: none; }
+
+  /* FIRST SETUP */
+  #setupScreen {
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    padding: 2rem 1.5rem;
+    background: var(--cream);
+  }
+  #setupScreen h1 { font-family: 'Lora', serif; font-size: 24px; color: var(--sage-dark); margin-bottom: 0.4rem; text-align: center; }
+  #setupScreen p { color: var(--text-muted); font-size: 14px; text-align: center; margin-bottom: 1.5rem; max-width: 300px; }
+  .setup-card {
+    background: var(--white); border-radius: var(--radius);
+    border: 1px solid var(--border); padding: 1.75rem 1.5rem;
+    width: 100%; max-width: 340px;
+    box-shadow: 0 4px 24px rgba(0,0,0,0.06);
+  }
+  .setup-card label { display: block; font-size: 12px; font-weight: 500; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 5px; }
+  .setup-card input {
+    width: 100%; padding: 11px 13px;
+    border: 1px solid var(--border); border-radius: var(--radius-sm);
+    font-family: 'DM Sans', sans-serif; font-size: 15px; color: var(--text);
+    background: var(--cream); margin-bottom: 1rem; outline: none;
+  }
+  .setup-card input:focus { border-color: var(--sage); }
+  .setup-error { color: var(--red); font-size: 13px; margin-bottom: 0.75rem; display: none; text-align: center; }
+  .setup-info { background: var(--sage-light); border-radius: var(--radius-sm); padding: 10px 12px; font-size: 13px; color: var(--sage-dark); margin-bottom: 1.25rem; line-height: 1.5; }
+
   /* CONFIG SCREEN */
   #configScreen {
     display: flex;
@@ -287,6 +351,36 @@
 </head>
 <body>
 
+<!-- LOGIN SCREEN -->
+<div id="loginScreen">
+  <h1>🍽</h1>
+  <p class="subtitle">Menú semanal · Solo para vosotros</p>
+  <div class="login-card">
+    <label>Contraseña</label>
+    <input type="password" id="loginPass" placeholder="••••••••" onkeydown="if(event.key==='Enter') doLogin()" autofocus />
+    <div class="login-error" id="loginError">Contraseña incorrecta</div>
+    <button class="btn-main" onclick="doLogin()">Entrar →</button>
+    <div class="login-hint">¿Primera vez? <a onclick="showSetup()">Crea tu contraseña</a></div>
+  </div>
+</div>
+
+<!-- FIRST SETUP SCREEN -->
+<div id="setupScreen">
+  <h1>🍽 Bienvenidos</h1>
+  <p>Cread una contraseña compartida para acceder a vuestra app</p>
+  <div class="setup-card">
+    <div class="setup-info">
+      📱 Esta contraseña la usáis los dos para entrar desde cualquier dispositivo. Guardadla bien.
+    </div>
+    <label>Contraseña</label>
+    <input type="password" id="setupPass1" placeholder="Mínimo 4 caracteres" />
+    <label>Repite la contraseña</label>
+    <input type="password" id="setupPass2" placeholder="Repite la contraseña" onkeydown="if(event.key==='Enter') doSetup()" />
+    <div class="setup-error" id="setupError">Las contraseñas no coinciden</div>
+    <button class="btn-main" onclick="doSetup()">Crear contraseña →</button>
+  </div>
+</div>
+
 <!-- CONFIG SCREEN -->
 <div id="configScreen">
   <h1>🍽 Menú Semanal</h1>
@@ -316,6 +410,7 @@
     <div class="header-top">
       <h1>🍽 Menú</h1>
       <button class="sync-btn" id="syncBtn" onclick="syncNow()">⟳ Sincronizar</button>
+      <button class="sync-btn" onclick="doLogout()" style="margin-left:4px" title="Cerrar sesión">🔒</button>
     </div>
     <div class="week-nav">
       <button onclick="changeWeek(-1)">‹ Antes</button>
@@ -375,7 +470,69 @@
 </div>
 
 <script>
-const DAYS = ['Lunes','Martes','Miércoles','Jueves','Viernes','Sábado','Domingo'];
+// ---- AUTH ----
+const AUTH_KEY = 'menu_auth_hash';
+const SESSION_KEY = 'menu_session';
+
+async function hashPassword(password) {
+  const msgBuffer = new TextEncoder().encode(password + 'menu_semanal_salt_2024');
+  const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
+  const hashArray = Array.from(new Uint8Array(hashBuffer));
+  return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
+function showSetup() {
+  document.getElementById('loginScreen').style.display = 'none';
+  document.getElementById('setupScreen').style.display = 'flex';
+  setTimeout(() => document.getElementById('setupPass1').focus(), 100);
+}
+
+async function doSetup() {
+  const p1 = document.getElementById('setupPass1').value;
+  const p2 = document.getElementById('setupPass2').value;
+  const err = document.getElementById('setupError');
+  err.style.display = 'none';
+  if (p1.length < 4) { err.textContent = 'Mínimo 4 caracteres'; err.style.display = 'block'; return; }
+  if (p1 !== p2) { err.textContent = 'Las contraseñas no coinciden'; err.style.display = 'block'; return; }
+  const hash = await hashPassword(p1);
+  localStorage.setItem(AUTH_KEY, hash);
+  setSession();
+  startApp();
+}
+
+async function doLogin() {
+  const pass = document.getElementById('loginPass').value;
+  const storedHash = localStorage.getItem(AUTH_KEY);
+  const err = document.getElementById('loginError');
+  err.style.display = 'none';
+  if (!storedHash) { showSetup(); return; }
+  const hash = await hashPassword(pass);
+  if (hash === storedHash) {
+    setSession();
+    startApp();
+  } else {
+    err.style.display = 'block';
+    document.getElementById('loginPass').classList.add('error');
+    setTimeout(() => document.getElementById('loginPass').classList.remove('error'), 1500);
+  }
+}
+
+function setSession() {
+  // Session valid for 30 days
+  sessionStorage.setItem(SESSION_KEY, Date.now() + 30 * 24 * 60 * 60 * 1000);
+}
+
+function isLoggedIn() {
+  const exp = sessionStorage.getItem(SESSION_KEY);
+  return exp && Date.now() < parseInt(exp);
+}
+
+function doLogout() {
+  sessionStorage.removeItem(SESSION_KEY);
+  location.reload();
+}
+
+
 const LOCAL_KEY = 'menu_semanal_v3';
 let SCRIPT_URL = '';
 
@@ -773,6 +930,8 @@ function loadLocal() {
 // ---- INIT ----
 function startApp() {
   loadLocal();
+  document.getElementById('loginScreen').style.display = 'none';
+  document.getElementById('setupScreen').style.display = 'none';
   document.getElementById('configScreen').style.display = 'none';
   document.getElementById('app').style.display = 'block';
   document.getElementById('weekLabel').textContent = getWeekLabel();
@@ -783,14 +942,26 @@ function startApp() {
 
 // On load
 window.onload = () => {
-  const savedUrl = localStorage.getItem('menu_script_url');
-  if (savedUrl) {
-    SCRIPT_URL = savedUrl;
+  const hasPassword = !!localStorage.getItem(AUTH_KEY);
+
+  // Already logged in this session
+  if (isLoggedIn()) {
+    const savedUrl = localStorage.getItem('menu_script_url');
+    if (savedUrl) SCRIPT_URL = savedUrl;
     startApp();
+    return;
   }
+
+  // No password set yet → show setup
+  if (!hasPassword) {
+    document.getElementById('loginScreen').style.display = 'none';
+    document.getElementById('setupScreen').style.display = 'flex';
+    return;
+  }
+
+  // Show login
+  document.getElementById('loginScreen').style.display = 'flex';
 };
 </script>
 </body>
 </html>
-
-
