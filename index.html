@@ -17,7 +17,6 @@
   *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
   body{font-family:'DM Sans',sans-serif;background:var(--cream);color:var(--text);min-height:100vh;font-size:15px}
 
-  /* LOGIN */
   #loginScreen{display:none;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;padding:2rem 1.5rem}
   #loginScreen h1{font-family:'Lora',serif;font-size:32px;color:var(--sage-dark);margin-bottom:.4rem;text-align:center}
   #loginScreen .subtitle{color:var(--text-muted);font-size:14px;text-align:center;margin-bottom:2rem}
@@ -31,7 +30,6 @@
   .btn-main:hover{background:var(--sage-dark)}
   .btn-main:disabled{opacity:.6;cursor:not-allowed}
 
-  /* APP */
   #app{display:none;max-width:480px;margin:0 auto;padding-bottom:80px}
   .app-header{background:var(--white);border-bottom:1px solid var(--border);padding:1rem 1.25rem 0;position:sticky;top:0;z-index:50}
   .header-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:.75rem}
@@ -40,6 +38,9 @@
   .user-badge{font-size:12px;color:var(--text-muted);background:var(--sage-light);border-radius:20px;padding:4px 10px}
   .sync-btn{display:flex;align-items:center;gap:5px;font-size:12px;color:var(--text-muted);background:none;border:1px solid var(--border);border-radius:20px;padding:4px 10px;cursor:pointer}
   .sync-btn:hover{border-color:var(--red);color:var(--red)}
+  .sync-indicator{font-size:11px;padding:3px 8px;border-radius:20px;background:var(--sage-light);color:var(--sage-dark);display:none}
+  .sync-indicator.visible{display:inline-block}
+  .sync-indicator.error{background:#ffeaea;color:var(--red)}
   .week-nav{display:flex;align-items:center;gap:8px;margin-bottom:.75rem}
   .week-nav button{background:none;border:1px solid var(--border);border-radius:20px;padding:4px 10px;font-size:13px;cursor:pointer;color:var(--text)}
   .week-nav button:hover{background:var(--sage-light)}
@@ -48,7 +49,6 @@
   .tab{flex:1;padding:10px 0;font-size:13px;font-weight:500;text-align:center;cursor:pointer;color:var(--text-muted);border:none;background:none;border-bottom:2px solid transparent;margin-bottom:-1px;transition:all .15s}
   .tab.active{color:var(--sage-dark);border-bottom-color:var(--sage)}
 
-  /* PLANNER */
   .planner{padding:1rem 1.25rem}
   .day-card{background:var(--white);border-radius:var(--radius);border:1px solid var(--border);margin-bottom:10px;overflow:hidden;transition:opacity .2s}
   .day-card.off{opacity:.5}
@@ -68,7 +68,6 @@
   .meal-select:focus{border-color:var(--sage)}
   .day-card.off .meal-rows{pointer-events:none}
 
-  /* RECIPES */
   .recipes{padding:1rem 1.25rem}
   .recipes-toolbar{display:flex;gap:8px;margin-bottom:1rem}
   .search-input{flex:1;padding:9px 12px;border:1px solid var(--border);border-radius:var(--radius-sm);font-family:'DM Sans',sans-serif;font-size:14px;background:var(--white);outline:none;color:var(--text)}
@@ -94,7 +93,6 @@
   .empty{text-align:center;padding:2.5rem 1rem;color:var(--text-muted);font-size:14px}
   .empty-icon{font-size:40px;margin-bottom:10px}
 
-  /* SHOPPING */
   .shopping{padding:1rem 1.25rem}
   .shop-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:.5rem}
   .shop-head h2{font-family:'Lora',serif;font-size:17px;color:var(--sage-dark)}
@@ -109,7 +107,6 @@
   .shop-item-text{font-size:14px;flex:1;transition:all .15s}
   .shop-item.done .shop-item-text{text-decoration:line-through;color:var(--text-light)}
 
-  /* MODAL */
   .overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:200;align-items:flex-end;justify-content:center}
   .overlay.open{display:flex}
   .modal{background:var(--white);border-radius:var(--radius) var(--radius) 0 0;padding:1.5rem 1.25rem;width:100%;max-width:480px;max-height:90vh;overflow-y:auto;animation:slideUp .25s ease}
@@ -131,12 +128,20 @@
   .btn-save{padding:10px 22px;background:var(--sage);color:white;border:none;border-radius:var(--radius-sm);font-family:'DM Sans',sans-serif;font-size:14px;font-weight:500;cursor:pointer}
   .btn-save:hover{background:var(--sage-dark)}
 
+  .loading-screen{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;gap:12px;color:var(--text-muted);font-size:14px}
+  .spinner{width:32px;height:32px;border:3px solid var(--border);border-top-color:var(--sage);border-radius:50%;animation:spin .7s linear infinite}
+  @keyframes spin{to{transform:rotate(360deg)}}
+
   @media(max-width:420px){.app-header,.planner,.recipes,.shopping{padding-left:1rem;padding-right:1rem}}
 </style>
 </head>
 <body>
 
-<!-- LOGIN -->
+<div id="loadingScreen" class="loading-screen">
+  <div class="spinner"></div>
+  <span>Cargando...</span>
+</div>
+
 <div id="loginScreen">
   <h1>🍽</h1>
   <p class="subtitle">Menú semanal · Acceso privado</p>
@@ -150,12 +155,12 @@
   </div>
 </div>
 
-<!-- APP -->
 <div id="app">
   <div class="app-header">
     <div class="header-top">
       <h1>🍽 Menú</h1>
       <div class="header-user">
+        <span class="sync-indicator" id="syncIndicator"></span>
         <span class="user-badge" id="userBadge"></span>
         <button class="sync-btn" onclick="doLogout()">🔒 Salir</button>
       </div>
@@ -176,7 +181,6 @@
   <div id="shopping" class="shopping section" style="display:none"></div>
 </div>
 
-<!-- MODAL -->
 <div class="overlay" id="overlay">
   <div class="modal">
     <div class="modal-title" id="modalTitle">Nueva receta</div>
@@ -202,24 +206,29 @@
 </div>
 
 <script>
-// ── SUPABASE CONFIG ──────────────────────────────────────────
-const SB_URL  = 'https://blesghbxrkkieytcckhg.supabase.co';
-const SB_KEY  = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJsZXNnaGJ4cmtraWV5dGNja2hnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkyMDY5NTMsImV4cCI6MjA5NDc4Mjk1M30.X29I7bd7IwCS0rkyGgpknqbjKh46QI1sWVcot7JdJo0';
-const SALT    = 'menu_semanal_salt_2024';
+// ── CONFIG ───────────────────────────────────────────────────
+const SB_URL = 'https://blesghbxrkkieytcckhg.supabase.co';
+const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJsZXNnaGJ4cmtraWV5dGNja2hnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkyMDY5NTMsImV4cCI6MjA5NDc4Mjk1M30.X29I7bd7IwCS0rkyGgpknqbjKh46QI1sWVcot7JdJo0';
+const SALT   = 'menu_semanal_salt_2024';
 
-async function hashPassword(password) {
-  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(password + SALT));
-  return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2,'0')).join('');
-}
+const DEFAULT_RECIPES = [
+  {id:1,name:'Pasta boloñesa',type:'cena',emoji:'🍝',ingredients:['300g pasta','200g carne picada','1 cebolla','2 tomates','aceite','sal','orégano'],notes:''},
+  {id:2,name:'Ensalada griega',type:'comida',emoji:'🥗',ingredients:['1 pepino','2 tomates','100g queso feta','aceitunas','cebolla roja','aceite de oliva'],notes:''},
+  {id:3,name:'Tortilla de patatas',type:'ambos',emoji:'🥚',ingredients:['4 huevos','2 patatas medianas','1 cebolla','aceite','sal'],notes:'Freír patatas a fuego medio'},
+  {id:4,name:'Arroz con pollo',type:'comida',emoji:'🍗',ingredients:['200g arroz','2 muslos de pollo','1 pimiento rojo','caldo de pollo','pimentón','sal','aceite'],notes:''},
+  {id:5,name:'Crema de calabacín',type:'cena',emoji:'🥣',ingredients:['2 calabacines','1 patata','1 cebolla','100ml nata','caldo vegetal','sal','pimienta'],notes:''},
+];
 
-async function sbFetch(path, opts = {}) {
+// ── SUPABASE HELPERS ─────────────────────────────────────────
+async function sbFetch(path, opts={}) {
   const res = await fetch(SB_URL + '/rest/v1/' + path, {
     ...opts,
     headers: {
       'apikey': SB_KEY,
       'Authorization': 'Bearer ' + SB_KEY,
       'Content-Type': 'application/json',
-      ...(opts.headers || {})
+      'Prefer': 'return=minimal',
+      ...(opts.headers||{})
     }
   });
   if (!res.ok) throw new Error(await res.text());
@@ -227,134 +236,206 @@ async function sbFetch(path, opts = {}) {
   return text ? JSON.parse(text) : null;
 }
 
+async function sbGet(table) {
+  const rows = await sbFetch(`${table}?select=*`, { method:'GET', headers:{'Accept':'application/json','Prefer':''} });
+  return rows;
+}
+
+async function sbUpsert(table, payload) {
+  return sbFetch(`${table}`, {
+    method: 'POST',
+    headers: { 'Prefer': 'resolution=merge-duplicates' },
+    body: JSON.stringify(payload)
+  });
+}
+
 // ── AUTH ─────────────────────────────────────────────────────
 const SESSION_KEY = 'menu_session_v4';
+
+async function hashPassword(password) {
+  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(password + SALT));
+  return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('');
+}
 
 async function doLogin() {
   const username = document.getElementById('loginUser').value.trim().toLowerCase();
   const password = document.getElementById('loginPass').value;
-  const errEl    = document.getElementById('loginError');
-  const btn      = document.getElementById('loginBtn');
+  const errEl = document.getElementById('loginError');
+  const btn   = document.getElementById('loginBtn');
   errEl.style.display = 'none';
-
-  if (!username || !password) { errEl.style.display = 'block'; return; }
-
-  btn.disabled = true;
-  btn.textContent = 'Comprobando...';
-
+  if (!username || !password) { errEl.style.display='block'; return; }
+  btn.disabled=true; btn.textContent='Comprobando...';
   try {
     const hash = await hashPassword(password);
-    // Busca el usuario en Supabase
     const rows = await sbFetch(
       `users?username=eq.${encodeURIComponent(username)}&password_hash=eq.${hash}&select=username`,
-      { method: 'GET', headers: { 'Accept': 'application/json' } }
+      { method:'GET', headers:{'Accept':'application/json','Prefer':''} }
     );
-
     if (rows && rows.length > 0) {
-      sessionStorage.setItem(SESSION_KEY, JSON.stringify({
-        user: rows[0].username,
-        exp: Date.now() + 30 * 24 * 60 * 60 * 1000
-      }));
-      startApp(rows[0].username);
+      sessionStorage.setItem(SESSION_KEY, JSON.stringify({ user: rows[0].username, exp: Date.now()+30*24*60*60*1000 }));
+      await startApp(rows[0].username);
     } else {
       showLoginError();
     }
-  } catch (e) {
-    errEl.textContent = 'Error de conexión. Inténtalo de nuevo.';
-    errEl.style.display = 'block';
+  } catch(e) {
+    errEl.textContent='Error de conexión. Inténtalo de nuevo.';
+    errEl.style.display='block';
   } finally {
-    btn.disabled = false;
-    btn.textContent = 'Entrar →';
+    btn.disabled=false; btn.textContent='Entrar →';
   }
 }
 
 function showLoginError() {
-  const errEl = document.getElementById('loginError');
-  errEl.textContent = 'Usuario o contraseña incorrectos';
-  errEl.style.display = 'block';
-  const el = document.getElementById('loginPass');
-  el.classList.add('error'); el.value = '';
-  setTimeout(() => el.classList.remove('error'), 1500);
+  const errEl=document.getElementById('loginError');
+  errEl.textContent='Usuario o contraseña incorrectos';
+  errEl.style.display='block';
+  const el=document.getElementById('loginPass');
+  el.classList.add('error'); el.value='';
+  setTimeout(()=>el.classList.remove('error'),1500);
 }
 
 function getSession() {
-  try {
-    const s = JSON.parse(sessionStorage.getItem(SESSION_KEY));
-    if (s && Date.now() < s.exp) return s;
-  } catch(e) {}
+  try { const s=JSON.parse(sessionStorage.getItem(SESSION_KEY)); if(s&&Date.now()<s.exp) return s; } catch(e){}
   return null;
 }
 
-function doLogout() {
-  sessionStorage.removeItem(SESSION_KEY);
-  location.reload();
-}
+function doLogout() { sessionStorage.removeItem(SESSION_KEY); location.reload(); }
 
-// ── DÍAS ─────────────────────────────────────────────────────
+// ── STATE ────────────────────────────────────────────────────
 const DAYS = ['Lunes','Martes','Miércoles','Jueves','Viernes','Sábado','Domingo'];
 
 let state = {
-  recipes: [
-    {id:1,name:'Pasta boloñesa',type:'cena',emoji:'🍝',ingredients:['300g pasta','200g carne picada','1 cebolla','2 tomates','aceite','sal','orégano'],notes:''},
-    {id:2,name:'Ensalada griega',type:'comida',emoji:'🥗',ingredients:['1 pepino','2 tomates','100g queso feta','aceitunas','cebolla roja','aceite de oliva'],notes:''},
-    {id:3,name:'Tortilla de patatas',type:'ambos',emoji:'🥚',ingredients:['4 huevos','2 patatas medianas','1 cebolla','aceite','sal'],notes:'Freír patatas a fuego medio'},
-    {id:4,name:'Arroz con pollo',type:'comida',emoji:'🍗',ingredients:['200g arroz','2 muslos de pollo','1 pimiento rojo','caldo de pollo','pimentón','sal','aceite'],notes:''},
-    {id:5,name:'Crema de calabacín',type:'cena',emoji:'🥣',ingredients:['2 calabacines','1 patata','1 cebolla','100ml nata','caldo vegetal','sal','pimienta'],notes:''},
-  ],
-  weeks:{}, checked:{}, editingId:null,
+  recipes: [],
+  weeks: {},
+  checked: {},
+  editingId: null,
   currentWeek: getWeekKey(new Date()),
-  tempIng:[]
+  tempIng: []
 };
+
+let syncTimer = null;
+
+// ── SYNC ─────────────────────────────────────────────────────
+function showSync(msg, isError=false) {
+  const el = document.getElementById('syncIndicator');
+  el.textContent = msg;
+  el.className = 'sync-indicator visible' + (isError ? ' error' : '');
+}
+function hideSync() {
+  const el = document.getElementById('syncIndicator');
+  el.className = 'sync-indicator';
+}
+
+async function loadFromSupabase() {
+  // Recetas
+  const recipeRows = await sbGet('recipes');
+  if (recipeRows && recipeRows.length > 0) {
+    // Tomar la fila más reciente (id=1 es nuestra fila única de recetas)
+    const row = recipeRows.find(r => r.id === 1);
+    if (row) state.recipes = row.data;
+  } else {
+    // Primera vez: subir recetas por defecto
+    state.recipes = DEFAULT_RECIPES;
+    await sbUpsert('recipes', { id: 1, data: state.recipes });
+  }
+
+  // Semanas
+  const weekRows = await sbGet('weeks');
+  if (weekRows) {
+    weekRows.forEach(row => { state.weeks[row.week_key] = row.data; });
+  }
+
+  // Checked
+  const checkedRows = await sbGet('shopping_checked');
+  if (checkedRows) {
+    checkedRows.forEach(row => { state.checked[row.week_key] = row.data; });
+  }
+}
+
+async function saveRecipes() {
+  showSync('Guardando...');
+  try {
+    await sbUpsert('recipes', { id: 1, data: state.recipes, updated_at: new Date().toISOString() });
+    showSync('✓ Guardado');
+    setTimeout(hideSync, 2000);
+  } catch(e) {
+    showSync('⚠ Error al guardar', true);
+    setTimeout(hideSync, 3000);
+  }
+}
+
+async function saveWeek() {
+  showSync('Guardando...');
+  try {
+    await sbUpsert('weeks', { week_key: state.currentWeek, data: getWeekData(), updated_at: new Date().toISOString() });
+    showSync('✓ Guardado');
+    setTimeout(hideSync, 2000);
+  } catch(e) {
+    showSync('⚠ Error al guardar', true);
+    setTimeout(hideSync, 3000);
+  }
+}
+
+async function saveChecked() {
+  try {
+    await sbUpsert('shopping_checked', { week_key: state.currentWeek, data: state.checked[state.currentWeek]||{}, updated_at: new Date().toISOString() });
+  } catch(e) { console.warn('Error guardando compra', e); }
+}
+
+// Debounce para no hacer una petición por cada cambio rápido
+function scheduleSaveWeek() {
+  clearTimeout(syncTimer);
+  syncTimer = setTimeout(saveWeek, 800);
+}
 
 // ── WEEK UTILS ───────────────────────────────────────────────
 function getWeekKey(date) {
-  const d = new Date(date), day = d.getDay();
-  d.setDate(d.getDate() + (day===0 ? -6 : 1) - day);
+  const d=new Date(date), day=d.getDay();
+  d.setDate(d.getDate()+(day===0?-6:1)-day);
   return d.toISOString().slice(0,10);
 }
-function getWeekStart(key) { return new Date(key + 'T00:00:00'); }
+function getWeekStart(key) { return new Date(key+'T00:00:00'); }
 function getWeekLabel() {
-  const d = getWeekStart(state.currentWeek), e = new Date(d);
+  const d=getWeekStart(state.currentWeek), e=new Date(d);
   e.setDate(d.getDate()+6);
-  const fmt = x => x.toLocaleDateString('es',{day:'numeric',month:'short'});
-  return fmt(d) + ' — ' + fmt(e);
+  const fmt=x=>x.toLocaleDateString('es',{day:'numeric',month:'short'});
+  return fmt(d)+' — '+fmt(e);
 }
 function changeWeek(dir) {
-  const d = getWeekStart(state.currentWeek);
-  d.setDate(d.getDate() + dir*7);
-  state.currentWeek = getWeekKey(d);
-  saveLocal();
-  document.getElementById('weekLabel').textContent = getWeekLabel();
+  const d=getWeekStart(state.currentWeek);
+  d.setDate(d.getDate()+dir*7);
+  state.currentWeek=getWeekKey(d);
+  document.getElementById('weekLabel').textContent=getWeekLabel();
   renderPlanner();
-  if (document.getElementById('shopping').style.display !== 'none') renderShopping();
+  if(document.getElementById('shopping').style.display!=='none') renderShopping();
 }
 function getWeekData() {
-  if (!state.weeks[state.currentWeek])
-    state.weeks[state.currentWeek] = DAYS.map(day => ({day, active:true, comida:'', cena:''}));
+  if(!state.weeks[state.currentWeek])
+    state.weeks[state.currentWeek]=DAYS.map(day=>({day,active:true,comida:'',cena:''}));
   return state.weeks[state.currentWeek];
 }
 
 // ── TABS ─────────────────────────────────────────────────────
 function showTab(name) {
-  document.querySelectorAll('.tab').forEach((t,i) =>
-    t.classList.toggle('active', ['planner','recipes','shopping'][i] === name));
-  ['planner','recipes','shopping'].forEach(id =>
-    document.getElementById(id).style.display = id === name ? 'block' : 'none');
-  if (name === 'shopping') renderShopping();
+  document.querySelectorAll('.tab').forEach((t,i)=>
+    t.classList.toggle('active',['planner','recipes','shopping'][i]===name));
+  ['planner','recipes','shopping'].forEach(id=>
+    document.getElementById(id).style.display=id===name?'block':'none');
+  if(name==='shopping') renderShopping();
 }
 
 // ── PLANNER ──────────────────────────────────────────────────
 function renderPlanner() {
-  const data = getWeekData();
-  const comidas = state.recipes.filter(r => r.type==='comida' || r.type==='ambos');
-  const cenas   = state.recipes.filter(r => r.type==='cena'   || r.type==='ambos');
-  document.getElementById('planner').innerHTML = data.map((d,i) => {
-    const date = new Date(getWeekStart(state.currentWeek));
+  const data=getWeekData();
+  const comidas=state.recipes.filter(r=>r.type==='comida'||r.type==='ambos');
+  const cenas=state.recipes.filter(r=>r.type==='cena'||r.type==='ambos');
+  document.getElementById('planner').innerHTML=data.map((d,i)=>{
+    const date=new Date(getWeekStart(state.currentWeek));
     date.setDate(date.getDate()+i);
-    const dateStr = date.toLocaleDateString('es',{weekday:'short',day:'numeric',month:'short'});
-    const opts = (list, slot) =>
-      `<option value="">— Sin planificar —</option>` +
-      list.map(r => `<option value="${r.id}" ${d[slot]==r.id?'selected':''}>${r.emoji} ${r.name}</option>`).join('');
+    const dateStr=date.toLocaleDateString('es',{weekday:'short',day:'numeric',month:'short'});
+    const opts=(list,slot)=>
+      `<option value="">— Sin planificar —</option>`+
+      list.map(r=>`<option value="${r.id}" ${d[slot]==r.id?'selected':''}>${r.emoji} ${r.name}</option>`).join('');
     return `<div class="day-card ${d.active?'':'off'}">
       <div class="day-head">
         <div><div class="day-name">${d.day}</div><div class="day-date">${dateStr}</div></div>
@@ -372,85 +453,95 @@ function renderPlanner() {
     </div>`;
   }).join('');
 }
-function toggleDay(i) { getWeekData()[i].active=!getWeekData()[i].active; saveLocal(); renderPlanner(); }
-function setMeal(i,slot,val) { getWeekData()[i][slot]=val; saveLocal(); }
+function toggleDay(i) {
+  getWeekData()[i].active=!getWeekData()[i].active;
+  renderPlanner(); scheduleSaveWeek();
+}
+function setMeal(i,slot,val) {
+  getWeekData()[i][slot]=val; scheduleSaveWeek();
+}
 
 // ── RECIPES ──────────────────────────────────────────────────
 function renderRecipes() {
-  const q = (document.getElementById('recipeSearch')||{value:''}).value.toLowerCase();
-  const list = state.recipes.filter(r => r.name.toLowerCase().includes(q));
-  const tl = {comida:'Comida',cena:'Cena',ambos:'Comida y cena'};
-  document.getElementById('recipes').innerHTML = `
+  const q=(document.getElementById('recipeSearch')||{value:''}).value.toLowerCase();
+  const list=state.recipes.filter(r=>r.name.toLowerCase().includes(q));
+  const tl={comida:'Comida',cena:'Cena',ambos:'Comida y cena'};
+  document.getElementById('recipes').innerHTML=`
     <div class="recipes-toolbar">
       <input type="text" id="recipeSearch" class="search-input" placeholder="Buscar..." oninput="renderRecipes()" value="${q}" />
       <button class="btn-add" onclick="openModal()">+ Nueva</button>
     </div>
     ${list.length===0
-      ? `<div class="empty"><div class="empty-icon">📖</div>No hay recetas todavía.<br>¡Añade la primera!</div>`
-      : list.map(r => `<div class="recipe-card">
-          <div class="recipe-main">
-            <div class="recipe-emoji">${r.emoji||'🍽'}</div>
-            <div class="recipe-info">
-              <div class="recipe-title">${r.name}</div>
-              <div class="recipe-sub">${tl[r.type]} · ${r.ingredients.length} ingredientes</div>
-            </div>
-            <div class="recipe-btns">
-              <button class="icon-btn" onclick="toggleIngPanel(${r.id})">📋</button>
-              <button class="icon-btn" onclick="editRecipe(${r.id})">✏️</button>
-              <button class="icon-btn delete" onclick="deleteRecipe(${r.id})">🗑</button>
-            </div>
+      ?`<div class="empty"><div class="empty-icon">📖</div>No hay recetas todavía.<br>¡Añade la primera!</div>`
+      :list.map(r=>`<div class="recipe-card">
+        <div class="recipe-main">
+          <div class="recipe-emoji">${r.emoji||'🍽'}</div>
+          <div class="recipe-info">
+            <div class="recipe-title">${r.name}</div>
+            <div class="recipe-sub">${tl[r.type]} · ${r.ingredients.length} ingredientes</div>
           </div>
-          <div class="recipe-ings" id="ings_${r.id}">
-            <hr class="ing-separator">
-            <div class="ing-tags">${r.ingredients.map(i=>`<span class="ing-tag">${i}</span>`).join('')}</div>
-            ${r.notes?`<div class="recipe-notes">${r.notes}</div>`:''}
+          <div class="recipe-btns">
+            <button class="icon-btn" onclick="toggleIngPanel(${r.id})">📋</button>
+            <button class="icon-btn" onclick="editRecipe(${r.id})">✏️</button>
+            <button class="icon-btn delete" onclick="deleteRecipe(${r.id})">🗑</button>
           </div>
-        </div>`).join('')}`;
+        </div>
+        <div class="recipe-ings" id="ings_${r.id}">
+          <hr class="ing-separator">
+          <div class="ing-tags">${r.ingredients.map(i=>`<span class="ing-tag">${i}</span>`).join('')}</div>
+          ${r.notes?`<div class="recipe-notes">${r.notes}</div>`:''}
+        </div>
+      </div>`).join('')}`;
 }
-function toggleIngPanel(id) { const el=document.getElementById('ings_'+id); if(el) el.classList.toggle('open'); }
-function openModal() {
-  state.editingId=null; state.tempIng=[];
+function toggleIngPanel(id){const el=document.getElementById('ings_'+id);if(el)el.classList.toggle('open');}
+function openModal(){
+  state.editingId=null;state.tempIng=[];
   document.getElementById('modalTitle').textContent='Nueva receta';
   ['rName','rEmoji','rNotes'].forEach(id=>document.getElementById(id).value='');
   document.getElementById('rType').value='comida';
   document.getElementById('ingInput').value='';
-  renderChips(); document.getElementById('overlay').classList.add('open');
+  renderChips();document.getElementById('overlay').classList.add('open');
 }
-function editRecipe(id) {
-  const r=state.recipes.find(x=>x.id===id); if(!r) return;
-  state.editingId=id; state.tempIng=[...r.ingredients];
+function editRecipe(id){
+  const r=state.recipes.find(x=>x.id===id);if(!r)return;
+  state.editingId=id;state.tempIng=[...r.ingredients];
   document.getElementById('modalTitle').textContent='Editar receta';
   document.getElementById('rName').value=r.name;
   document.getElementById('rType').value=r.type;
   document.getElementById('rEmoji').value=r.emoji||'';
   document.getElementById('rNotes').value=r.notes||'';
   document.getElementById('ingInput').value='';
-  renderChips(); document.getElementById('overlay').classList.add('open');
+  renderChips();document.getElementById('overlay').classList.add('open');
 }
-function deleteRecipe(id) {
-  if(!confirm('¿Eliminar esta receta?')) return;
+function deleteRecipe(id){
+  if(!confirm('¿Eliminar esta receta?'))return;
   state.recipes=state.recipes.filter(r=>r.id!==id);
   Object.values(state.weeks).forEach(w=>w.forEach(d=>{if(d.comida==id)d.comida='';if(d.cena==id)d.cena='';}));
-  saveLocal(); renderRecipes(); renderPlanner();
+  renderRecipes();renderPlanner();saveRecipes();
 }
-function addChip() { const v=document.getElementById('ingInput').value.trim(); if(!v)return; state.tempIng.push(v); document.getElementById('ingInput').value=''; renderChips(); }
-function removeChip(i) { state.tempIng.splice(i,1); renderChips(); }
-function renderChips() {
+function addChip(){const v=document.getElementById('ingInput').value.trim();if(!v)return;state.tempIng.push(v);document.getElementById('ingInput').value='';renderChips();}
+function removeChip(i){state.tempIng.splice(i,1);renderChips();}
+function renderChips(){
   document.getElementById('ingChips').innerHTML=state.tempIng.map((ing,i)=>
     `<div class="chip">${ing}<button onclick="removeChip(${i})">×</button></div>`).join('');
 }
-function saveRecipe() {
-  const name=document.getElementById('rName').value.trim(); if(!name){alert('Escribe el nombre');return;}
-  const recipe={id:state.editingId||Date.now(),name,type:document.getElementById('rType').value,
-    emoji:document.getElementById('rEmoji').value||'🍽',ingredients:[...state.tempIng],notes:document.getElementById('rNotes').value.trim()};
+function saveRecipe(){
+  const name=document.getElementById('rName').value.trim();if(!name){alert('Escribe el nombre');return;}
+  const recipe={
+    id:state.editingId||Date.now(),name,
+    type:document.getElementById('rType').value,
+    emoji:document.getElementById('rEmoji').value||'🍽',
+    ingredients:[...state.tempIng],
+    notes:document.getElementById('rNotes').value.trim()
+  };
   if(state.editingId){const idx=state.recipes.findIndex(r=>r.id===state.editingId);if(idx>=0)state.recipes[idx]=recipe;}
   else state.recipes.push(recipe);
-  closeModal(); saveLocal(); renderRecipes(); renderPlanner();
+  closeModal();renderRecipes();renderPlanner();saveRecipes();
 }
-function closeModal() { document.getElementById('overlay').classList.remove('open'); state.editingId=null; state.tempIng=[]; }
+function closeModal(){document.getElementById('overlay').classList.remove('open');state.editingId=null;state.tempIng=[];}
 
 // ── SHOPPING ─────────────────────────────────────────────────
-const CATS = {
+const CATS={
   'Frutas y verduras':['tomate','cebolla','pimiento','calabacín','patata','zanahoria','pepino','ajo','espinaca','brócoli','lechuga','berenjena','col','puerro','limón','naranja','manzana','plátano','aguacate'],
   'Carnes y pescados':['pollo','carne','ternera','cerdo','salmón','atún','bacalao','gambas','pescado','merluza','lubina','jamón','chorizo','pavo','pechuga'],
   'Lácteos y huevos':['huevo','queso','leche','nata','yogur','mantequilla','feta','mozzarella','crema'],
@@ -458,13 +549,13 @@ const CATS = {
   'Condimentos y especias':['sal','aceite','orégano','pimentón','pimienta','comino','tomillo','laurel','vinagre','azúcar','salsa','mostaza'],
   'Pan y conservas':['pan','harina','tomate frito','caldo','lata','conserva'],
 };
-function categorize(ing) {
+function categorize(ing){
   const low=ing.toLowerCase();
   for(const [cat,kw] of Object.entries(CATS)) if(kw.some(k=>low.includes(k))) return cat;
   return 'Otros';
 }
-function renderShopping() {
-  const wd=getWeekData(), active=wd.filter(d=>d.active);
+function renderShopping(){
+  const wd=getWeekData(),active=wd.filter(d=>d.active);
   const ids=[...new Set(active.flatMap(d=>[d.comida,d.cena]).filter(Boolean))];
   const recs=ids.map(id=>state.recipes.find(r=>r.id==id)).filter(Boolean);
   const el=document.getElementById('shopping');
@@ -478,7 +569,7 @@ function renderShopping() {
   recs.forEach(r=>r.ingredients.forEach(ing=>{all[ing]=(all[ing]||0)+1;}));
   const byCat={};
   Object.keys(all).forEach(ing=>{const cat=categorize(ing);if(!byCat[cat])byCat[cat]=[];byCat[cat].push(ing);});
-  const total=Object.keys(all).length, done=Object.values(ck).filter(Boolean).length;
+  const total=Object.keys(all).length,done=Object.values(ck).filter(Boolean).length;
   el.innerHTML=`<div class="shop-head"><h2>Lista de la compra</h2><button class="btn-clear" onclick="clearChecked()">Limpiar</button></div>
     <div class="shop-summary">${active.length} días · ${recs.length} recetas · ${done}/${total} ingredientes ✓</div>
     ${Object.entries(byCat).sort(([a],[b])=>a.localeCompare(b)).map(([cat,items])=>`
@@ -487,42 +578,39 @@ function renderShopping() {
         return`<div class="shop-item ${ck[id]?'done':''}" onclick="toggleCheck('${id}')"><div class="check-box">${ck[id]?'✓':''}</div><span class="shop-item-text">${ing}</span></div>`;
       }).join('')}`).join('')}`;
 }
-function toggleCheck(id) {
+function toggleCheck(id){
   if(!state.checked[state.currentWeek]) state.checked[state.currentWeek]={};
   state.checked[state.currentWeek][id]=!state.checked[state.currentWeek][id];
-  saveLocal(); renderShopping();
+  saveChecked();renderShopping();
 }
-function clearChecked() { state.checked[state.currentWeek]={}; saveLocal(); renderShopping(); }
-
-// ── STORAGE ──────────────────────────────────────────────────
-const LOCAL_KEY = 'menu_semanal_v3';
-function saveLocal() {
-  try { localStorage.setItem(LOCAL_KEY, JSON.stringify({recipes:state.recipes,weeks:state.weeks,checked:state.checked})); } catch(e){}
-}
-function loadLocal() {
-  try {
-    const d=localStorage.getItem(LOCAL_KEY);
-    if(d){const p=JSON.parse(d);state.recipes=p.recipes||state.recipes;state.weeks=p.weeks||state.weeks;state.checked=p.checked||state.checked;}
-  } catch(e){}
-}
+function clearChecked(){state.checked[state.currentWeek]={};saveChecked();renderShopping();}
 
 // ── INIT ─────────────────────────────────────────────────────
-function startApp(username) {
-  loadLocal();
+async function startApp(username) {
   document.getElementById('loginScreen').style.display='none';
+  document.getElementById('loadingScreen').style.display='flex';
+
+  try {
+    await loadFromSupabase();
+  } catch(e) {
+    console.warn('Error cargando de Supabase:', e);
+  }
+
+  document.getElementById('loadingScreen').style.display='none';
   document.getElementById('app').style.display='block';
   document.getElementById('userBadge').textContent='👤 '+username;
   document.getElementById('weekLabel').textContent=getWeekLabel();
-  renderPlanner(); renderRecipes();
+  renderPlanner();renderRecipes();
 }
 
-window.onload = () => {
+window.onload = async () => {
   const session = getSession();
   if (session) {
-    startApp(session.user);
+    await startApp(session.user);
   } else {
+    document.getElementById('loadingScreen').style.display='none';
     document.getElementById('loginScreen').style.display='flex';
-    setTimeout(() => document.getElementById('loginUser').focus(), 100);
+    setTimeout(()=>document.getElementById('loginUser').focus(),100);
   }
 };
 </script>
