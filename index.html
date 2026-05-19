@@ -389,23 +389,34 @@ function scheduleSaveWeek() {
 }
 
 // ── WEEK UTILS ───────────────────────────────────────────────
+// Devuelve "YYYY-MM-DD" del lunes de la semana de 'date', en hora local
 function getWeekKey(date) {
-  const d=new Date(date), day=d.getDay();
-  d.setDate(d.getDate()+(day===0?-6:1)-day);
-  return d.toISOString().slice(0,10);
+  const d = new Date(date);
+  const day = d.getDay(); // 0=dom, 1=lun ... 6=sab
+  const diff = (day === 0 ? -6 : 1 - day); // días hasta el lunes
+  d.setDate(d.getDate() + diff);
+  const y = d.getFullYear();
+  const m = String(d.getMonth()+1).padStart(2,'0');
+  const dd = String(d.getDate()).padStart(2,'0');
+  return `${y}-${m}-${dd}`;
 }
-function getWeekStart(key) { return new Date(key+'T00:00:00'); }
+// Parsea "YYYY-MM-DD" en hora local (sin conversión UTC)
+function getWeekStart(key) {
+  const [y,m,d] = key.split('-').map(Number);
+  return new Date(y, m-1, d);
+}
 function getWeekLabel() {
-  const d=getWeekStart(state.currentWeek), e=new Date(d);
+  const d = getWeekStart(state.currentWeek);
+  const e = new Date(d);
   e.setDate(d.getDate()+6);
-  const fmt=x=>x.toLocaleDateString('es',{day:'numeric',month:'short'});
+  const fmt = x => x.toLocaleDateString('es',{day:'numeric',month:'short'});
   return fmt(d)+' — '+fmt(e);
 }
 function changeWeek(dir) {
-  const d=getWeekStart(state.currentWeek);
-  d.setDate(d.getDate()+dir*7);
-  state.currentWeek=getWeekKey(d);
-  document.getElementById('weekLabel').textContent=getWeekLabel();
+  const d = getWeekStart(state.currentWeek);
+  d.setDate(d.getDate() + dir*7);
+  state.currentWeek = getWeekKey(d);
+  document.getElementById('weekLabel').textContent = getWeekLabel();
   renderPlanner();
   if(document.getElementById('shopping').style.display!=='none') renderShopping();
 }
