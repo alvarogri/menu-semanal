@@ -272,7 +272,7 @@ async function doLogin() {
       { method:'GET', headers:{'Accept':'application/json','Prefer':''} }
     );
     if (rows && rows.length > 0) {
-      sessionStorage.setItem(SESSION_KEY, JSON.stringify({ user: rows[0].username, exp: Date.now()+30*24*60*60*1000 }));
+      localStorage.setItem(SESSION_KEY, JSON.stringify({ user: rows[0].username, exp: Date.now()+30*24*60*60*1000 }));
       await startApp(rows[0].username);
     } else {
       showLoginError();
@@ -295,11 +295,11 @@ function showLoginError() {
 }
 
 function getSession() {
-  try { const s=JSON.parse(sessionStorage.getItem(SESSION_KEY)); if(s&&Date.now()<s.exp) return s; } catch(e){}
+  try { const s=JSON.parse(localStorage.getItem(SESSION_KEY)); if(s&&Date.now()<s.exp) return s; } catch(e){}
   return null;
 }
 
-function doLogout() { sessionStorage.removeItem(SESSION_KEY); location.reload(); }
+function doLogout() { localStorage.removeItem(SESSION_KEY); location.reload(); }
 
 // ── STATE ────────────────────────────────────────────────────
 const DAYS = ['Lunes','Martes','Miércoles','Jueves','Viernes','Sábado','Domingo'];
